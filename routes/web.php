@@ -10,21 +10,21 @@ Route::get('/', function () {
 // Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboards.admin');
+        return view('backend.dashboard.admin');
     })->name('dashboard');
 });
 
 // Creator Routes
 Route::middleware(['auth', 'role:creator'])->prefix('creator')->name('creator.')->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboards.creator');
+        return view('backend.dashboard.creator');
     })->name('dashboard');
 });
 
 // Reader Routes
 Route::middleware(['auth', 'role:reader'])->prefix('reader')->name('reader.')->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboards.reader');
+        return view('backend.dashboard.reader');
     })->name('dashboard');
 });
 
