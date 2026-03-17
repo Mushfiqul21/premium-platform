@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Creator\PostController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'role:creator'])->prefix('creator')->name('creator.')
     Route::get('/dashboard', function () {
         return view('backend.dashboard.creator');
     })->name('dashboard');
+
+    Route::resource('posts', PostController::class);
 });
 
 // Reader Routes

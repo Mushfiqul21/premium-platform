@@ -25,7 +25,7 @@
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
     <h2 class="text-base font-semibold text-gray-700 mb-4">My Recent Posts</h2>
-    <p class="text-sm text-gray-400">No posts yet. <a href="#" class="text-indigo-600 hover:underline">Create your first post →</a></p>
+    <p class="text-sm text-gray-400">No posts yet. <a href="{{ route('creator.posts.create') }}" class="text-indigo-600 hover:underline">Create your first post →</a></p>
 </div>
 
 @endsection
