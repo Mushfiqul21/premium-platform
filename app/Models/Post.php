@@ -52,4 +52,9 @@ class Post extends Model
     {
         return $this->status === self::STATUS_PUBLISHED;
     }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }
