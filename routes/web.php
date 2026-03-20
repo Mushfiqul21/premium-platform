@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Creator\PostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Reader\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,7 +21,7 @@ Route::middleware(['auth', 'role:creator'])->prefix('creator')->name('creator.')
         return view('backend.dashboard.creator');
     })->name('dashboard');
 
-    Route::resource('posts', PostController::class);
+    Route::resource('posts', \App\Http\Controllers\Creator\PostController::class);
 });
 
 // Reader Routes
@@ -29,6 +29,12 @@ Route::middleware(['auth', 'role:reader'])->prefix('reader')->name('reader.')->g
     Route::get('/dashboard', function () {
         return view('backend.dashboard.reader');
     })->name('dashboard');
+
+    Route::resource('posts', \App\Http\Controllers\Reader\PostController::class)->only(['index', 'show']);
+
+    Route::get('/payment/checkout/{post}', [PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+    Route::get('/payment/cancel/{post}', [PaymentController::class, 'cancel'])->name('payment.cancel');
 });
 
 Route::middleware('auth')->group(function () {

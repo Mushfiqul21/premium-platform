@@ -95,6 +95,7 @@
 
             @if(Auth::user()->hasRole('reader'))
             <div class="flex items-center gap-4">
+                 <a href="{{ route('reader.posts.index') }}" class="text-sm text-gray-600 hover:text-indigo-600">Browse Posts</a>
                 <span class="text-sm font-medium text-gray-700">{{ Auth::user()->name }}</span>
                 <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full capitalize">Reader</span>
                 <form method="POST" action="{{ route('logout') }}">
