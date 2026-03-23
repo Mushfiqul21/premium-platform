@@ -35,6 +35,11 @@ Route::middleware(['auth', 'role:reader'])->prefix('reader')->name('reader.')->g
     Route::get('/payment/checkout/{post}', [PaymentController::class, 'checkout'])->name('payment.checkout');
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
     Route::get('/payment/cancel/{post}', [PaymentController::class, 'cancel'])->name('payment.cancel');
+
+     Route::post('/sslcommerz/initiate/{post}', [\App\Http\Controllers\Reader\SSLCommerzPaymentController::class, 'initiate'])->name('sslcommerz.initiate');
+    Route::post('/sslcommerz/success', [\App\Http\Controllers\Reader\SSLCommerzPaymentController::class, 'success'])->name('sslcommerz.success');
+    Route::post('/sslcommerz/fail', [\App\Http\Controllers\Reader\SSLCommerzPaymentController::class, 'fail'])->name('sslcommerz.fail');
+    Route::post('/sslcommerz/cancel', [\App\Http\Controllers\Reader\SSLCommerzPaymentController::class, 'cancel'])->name('sslcommerz.cancel');
 });
 
 Route::middleware('auth')->group(function () {
