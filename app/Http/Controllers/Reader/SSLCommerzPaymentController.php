@@ -5,38 +5,25 @@ namespace App\Http\Controllers\Reader;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Post;
+use App\Services\SSLCommerzService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use RayhanBapari\SslcommerzPayment\DTOs\PaymentData;
-use RayhanBapari\SslcommerzPayment\Facades\Sslcommerz;
 
 class SSLCommerzPaymentController extends Controller
 {
+    protected SSLCommerzService $sslcommerz;
+
+    public function __construct(SSLCommerzService $sslcommerz)
+    {
+        $this->sslcommerz = $sslcommerz;
+    }
+
     public function initiate(Post $post)
     {
         abort_if($post->isFree(), 403);
         abort_if(Auth::user()->hasUnlocked($post), 403);
 
         $transactionId = 'TXN-' . uniqid();
-
-        $dto                   = new PaymentData();
-        $dto->tran_id          = $transactionId;
-        $dto->total_amount     = $post->price;
-        $dto->currency         = 'BDT';
-        $dto->cus_name         = Auth::user()->name;
-        $dto->cus_email        = Auth::user()->email;
-        $dto->cus_phone        = '01700000000';
-        $dto->cus_add1         = 'Dhaka';
-        $dto->cus_city         = 'Dhaka';
-        $dto->cus_country      = 'Bangladesh';
-        $dto->cus_postcode     = '1200';
-        $dto->product_name     = $post->title;
-        $dto->product_category = 'Digital';
-        $dto->product_profile  = 'non-physical-goods';
-        $dto->shipping_method  = 'NO';
-        $dto->value_a          = (string) Auth::id();
-        $dto->value_b          = (string) $post->id;
-        $dto->value_c          = $transactionId;
 
         // Store pending payment
         Payment::create([
@@ -48,55 +35,72 @@ class SSLCommerzPaymentController extends Controller
             'transaction_id' => $transactionId,
         ]);
 
-        $response = Sslcommerz::initiatePayment($dto);
+        $response = $this->sslcommerz->initiatePayment([
+            'amount'       => $post->price,
+            'tran_id'      => $transactionId,
+            'success_url'  => route('reader.sslcommerz.success'),
+            'fail_url'     => route('reader.sslcommerz.fail'),
+            'cancel_url'   => route('reader.sslcommerz.cancel'),
+            'cus_name'     => Auth::user()->name,
+            'cus_email'    => Auth::user()->email,
+            'product_name' => $post->title,
+            'value_a'      => (string) Auth::id(),
+            'value_b'      => (string) $post->id,
+        ]);
 
-        if ($response->success()) {
-            return redirect($response->gatewayPageURL());
+        if (isset($response['GatewayPageURL']) && $response['GatewayPageURL']) {
+            return redirect($response['GatewayPageURL']);
         }
 
-        return back()->with('error', 'Could not initiate payment: ' . $response->error());
+        return back()->with('error', 'Could not initiate payment. Try again.');
     }
 
     public function success(Request $request)
     {
-        if (!Sslcommerz::verifyIpnHash($request->post())) {
-            abort(403, 'Invalid signature.');
+        $tranId = $request->tran_id ?? $request->input('tran_id');
+
+        if (!$tranId) {
+            return redirect()->route('login')
+                ->with('error', 'Invalid payment response.');
         }
 
-        $validation = Sslcommerz::orderValidate($request->val_id);
+        $payment = Payment::where('transaction_id', $tranId)->first();
 
-        if (!in_array($validation['status'] ?? '', ['VALID', 'VALIDATED'])) {
-            return redirect()->route('reader.posts.index')
-                             ->with('error', 'Payment validation failed.');
+        if (!$payment) {
+            return redirect()->route('login')
+                ->with('error', 'Payment record not found.');
         }
 
-        Payment::where('transaction_id', $request->tran_id)
-               ->update([
-                   'status'         => Payment::STATUS_PAID,
-                   'transaction_id' => $request->bank_tran_id,
-               ]);
+        $payment->update([
+            'status'         => Payment::STATUS_PAID,
+            'transaction_id' => $request->bank_tran_id ?? $tranId,
+        ]);
 
-        $post = Post::findOrFail($request->value_b);
+        // Log user back in using stored user_id
+        $userId = $request->value_a ?? $payment->user_id;
+        Auth::loginUsingId($userId);
+
+        $post = Post::findOrFail($payment->post_id);
 
         return redirect()->route('reader.posts.show', $post)
-                         ->with('success', 'Post unlocked successfully! 🎉');
+            ->with('success', 'Post unlocked successfully! 🎉');
     }
 
     public function fail(Request $request)
     {
         Payment::where('transaction_id', $request->tran_id)
-               ->update(['status' => Payment::STATUS_FAILED]);
+            ->update(['status' => Payment::STATUS_FAILED]);
 
         return redirect()->route('reader.posts.index')
-                         ->with('error', 'Payment failed. Please try again.');
+            ->with('error', 'Payment failed. Please try again.');
     }
 
     public function cancel(Request $request)
     {
         Payment::where('transaction_id', $request->tran_id)
-               ->update(['status' => Payment::STATUS_FAILED]);
+            ->update(['status' => Payment::STATUS_FAILED]);
 
         return redirect()->route('reader.posts.index')
-                         ->with('error', 'Payment cancelled.');
+            ->with('error', 'Payment cancelled.');
     }
 }
