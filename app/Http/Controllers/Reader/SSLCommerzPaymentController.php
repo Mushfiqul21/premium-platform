@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Reader;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Post;
+use App\Notifications\PaymentConfirmationNotification;
 use App\Services\SSLCommerzService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,6 +76,10 @@ class SSLCommerzPaymentController extends Controller
             'status'         => Payment::STATUS_PAID,
             'transaction_id' => $request->bank_tran_id ?? $tranId,
         ]);
+        $payment->refresh();
+        Auth::loginUsingId($payment->user_id);
+        $user = Auth::user();
+        $user->notify(new PaymentConfirmationNotification($payment));
 
         // Log user back in using stored user_id
         $userId = $request->value_a ?? $payment->user_id;

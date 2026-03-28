@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Reader;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Post;
+use App\Notifications\PaymentConfirmationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Stripe\Stripe;
@@ -50,9 +51,9 @@ class PaymentController extends Controller
 
             // avoid duplicate payment records
             $exists = Payment::where('user_id', Auth::id())
-                              ->where('post_id', $post->id)
-                              ->where('status', Payment::STATUS_PAID)
-                              ->exists();
+                ->where('post_id', $post->id)
+                ->where('status', Payment::STATUS_PAID)
+                ->exists();
 
             if (!$exists) {
                 Payment::create([
@@ -64,18 +65,26 @@ class PaymentController extends Controller
                     'transaction_id' => $session->payment_intent,
                 ]);
             }
+            $user = Auth::user();
+            $payment = Payment::where('user_id', $user->id)
+                ->where('post_id', $post->id)
+                ->where('status', Payment::STATUS_PAID)
+                ->latest()
+                ->first();
+
+            $user->notify(new PaymentConfirmationNotification($payment));
 
             return redirect()->route('reader.posts.show', $post)
-                             ->with('success', 'Post unlocked successfully! 🎉');
+                ->with('success', 'Post unlocked successfully! 🎉');
         }
 
         return redirect()->route('reader.posts.show', Post::findOrFail($request->post_id))
-                         ->with('error', 'Payment failed. Please try again.');
+            ->with('error', 'Payment failed. Please try again.');
     }
 
     public function cancel(Post $post)
     {
         return redirect()->route('reader.posts.show', $post)
-                         ->with('error', 'Payment cancelled.');
+            ->with('error', 'Payment cancelled.');
     }
 }
