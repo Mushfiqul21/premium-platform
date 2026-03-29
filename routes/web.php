@@ -13,6 +13,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', function () {
         return view('backend.dashboard.admin');
     })->name('dashboard');
+
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
+    Route::resource('posts', \App\Http\Controllers\Admin\PostController::class)->only(['index', 'destroy']);
+    Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
 });
 
 // Creator Routes
@@ -36,11 +40,11 @@ Route::middleware(['auth', 'role:reader'])->prefix('reader')->name('reader.')->g
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
     Route::get('/payment/cancel/{post}', [PaymentController::class, 'cancel'])->name('payment.cancel');
 
-     Route::post('/sslcommerz/initiate/{post}', [\App\Http\Controllers\Reader\SSLCommerzPaymentController::class, 'initiate'])->name('sslcommerz.initiate');
+    Route::post('/sslcommerz/initiate/{post}', [\App\Http\Controllers\Reader\SSLCommerzPaymentController::class, 'initiate'])->name('sslcommerz.initiate');
 
-     // Notifications
-Route::get('/notifications/{id}/read', [\App\Http\Controllers\Reader\NotificationController::class, 'read'])->name('notifications.read');
-Route::get('/notifications/mark-all-read', [\App\Http\Controllers\Reader\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    // Notifications
+    Route::get('/notifications/{id}/read', [\App\Http\Controllers\Reader\NotificationController::class, 'read'])->name('notifications.read');
+    Route::get('/notifications/mark-all-read', [\App\Http\Controllers\Reader\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
 });
 // SSLCommerz callbacks outside auth
 // SSLCommerz callbacks outside auth
@@ -56,4 +60,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
