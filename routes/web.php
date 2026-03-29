@@ -37,6 +37,10 @@ Route::middleware(['auth', 'role:reader'])->prefix('reader')->name('reader.')->g
     Route::get('/payment/cancel/{post}', [PaymentController::class, 'cancel'])->name('payment.cancel');
 
      Route::post('/sslcommerz/initiate/{post}', [\App\Http\Controllers\Reader\SSLCommerzPaymentController::class, 'initiate'])->name('sslcommerz.initiate');
+
+     // Notifications
+Route::get('/notifications/{id}/read', [\App\Http\Controllers\Reader\NotificationController::class, 'read'])->name('notifications.read');
+Route::get('/notifications/mark-all-read', [\App\Http\Controllers\Reader\NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
 });
 // SSLCommerz callbacks outside auth
 // SSLCommerz callbacks outside auth
