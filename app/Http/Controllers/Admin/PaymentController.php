@@ -10,6 +10,6 @@ class PaymentController extends Controller
     public function index()
     {
         $payments = Payment::with(['user', 'post'])->latest()->get();
-        return view('admin.payments.index', compact('payments'));
+        return view('backend.payments.index', compact('payments'));
     }
 }

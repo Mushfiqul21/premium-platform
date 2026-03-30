@@ -10,7 +10,7 @@ class PostController extends Controller
     public function index()
     {
         $posts = Post::with('author')->latest()->get();
-        return view('admin.posts.index', compact('posts'));
+        return view('backend.posts.index', compact('posts'));
     }
 
     public function destroy(Post $post)
