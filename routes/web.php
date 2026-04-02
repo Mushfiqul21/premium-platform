@@ -17,6 +17,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
     Route::resource('posts', \App\Http\Controllers\Admin\PostController::class)->only(['index', 'destroy']);
     Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
+    Route::get('permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('permissions.index');
+    Route::post('permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'store'])->name('permissions.store');
+    Route::post('permissions/assign-role', [\App\Http\Controllers\Admin\PermissionController::class, 'assignToRole'])->name('permissions.assignToRole');
+    Route::delete('permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'destroy'])->name('permissions.destroy');
+
+    // Roles
+    Route::post('roles/store', [\App\Http\Controllers\Admin\PermissionController::class, 'storeRole'])->name('roles.store');
+    Route::delete('roles/{role}', [\App\Http\Controllers\Admin\PermissionController::class, 'destroyRole'])->name('roles.destroy');
+
+    // Assign permissions to role
+    Route::post('permissions/assign-role', [\App\Http\Controllers\Admin\PermissionController::class, 'assignToRole'])->name('permissions.assignToRole');
 });
 
 // Creator Routes
